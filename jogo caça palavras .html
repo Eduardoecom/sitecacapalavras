@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caça-Palavras Profissional</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Raleway:wght@700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Variáveis de Cores - Tema American Pro */
+        :root {
+            --bg-color-start: #0a2342; /* Azul Marinho (Dark Blue) */
+            --bg-color-end: #1b4965;   /* Azul Petróleo (Steel Blue) */
+            --primary-color: #f0f0f0;  /* Branco Off-White (Quase Branco) */
+            --secondary-color: #ffffff;/* Branco Puro */
+            --select-color: #dc3545;   /* Vermelho Cardenal (Bootstrap Danger) */
+            --grid-bg: rgba(255, 255, 255, 0.98);
+            --grid-border: #e9ecef;    /* Cinza Claro */
+            --text-color: #343a40;     /* Cinza Escuro (Quase Preto) */
+            --text-light: #ffffff;
+            --cell-hover: #eaf1f8;     /* Azul Claro Suave */
+            
+            /* --cell-size e --font-size AGORA SÃO DEFINIDOS DINAMICAMENTE VIA JAVASCRIPT */
+            --cell-size: 40px;
+            --font-size: 1.5rem;
+
+            /* Cores para Palavras Encontradas (Ciclo de 6 cores com opacidade ajustada) */
+            --found-rgb-0: 40, 167, 69;    /* Verde Sucesso */
+            --found-rgb-1: 0, 123, 255;    /* Azul Primário */
+            --found-rgb-2: 111, 66, 193;   /* Roxo Escuro */
+            --found-rgb-3: 253, 126, 20;   /* Laranja Escuro */
+            --found-rgb-4: 32, 201, 151;   /* Verde Água */
+            --found-rgb-5: 108, 117, 125;  /* Cinza Neutro */
+            
+            --found-opacity: 0.6; /* Opacidade base para a sobreposição */
+            --select-shadow: 0 0 0 4px var(--select-color) inset; /* Sombra para seleção */
+        }
+
+        body {
+            font-family: 'Montserrat', Arial, sans-serif;
+            background: linear-gradient(135deg, var(--bg-color-start) 0%, var(--bg-color-end) 100%);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        /* --- Tela Inicial --- */
+        #start-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--grid-bg);
+            padding: 60px;
+            border-radius: 15px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 500px;
+        }
+        
+        #start-screen h1 {
+            font-family: 'Raleway', sans-serif;
+            font-size: 3.2rem;
+            color: var(--bg-color-start);
+            text-shadow: 2px 2px var(--select-color);
+            margin-bottom: 25px;
+            letter-spacing: 1px;
+        }
+
+        #start-screen p {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            margin-bottom: 30px;
+        }
+
+        /* Seletor de Dificuldade */
+        #difficulty-selector {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+
+        #difficulty-selector label {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 10px;
+        }
+
+        #difficulty-select {
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            border: 2px solid var(--bg-color-start);
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            cursor: pointer;
+            outline: none;
+            width: 80%;
+            max-width: 250px;
+            appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill="%23343a40" d="M8 12.5l-4-4h8l-4 4z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 12px;
+            transition: all 0.2s ease;
+        }
+        
+        #difficulty-select:hover, #difficulty-select:focus {
+            border-color: var(--select-color);
+            box-shadow: 0 0 8px rgba(220, 53, 69, 0.4);
+        }
+
+        #start-button {
+            padding: 18px 35px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-light);
+            background: var(--select-color);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        #start-button:hover {
+            transform: translateY(-2px);
+            background-color: #c82333;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        #start-button:active {
+             transform: translateY(0);
+        }
+
+        /* --- Jogo --- */
+        #game-wrapper {
+            display: none; 
+            flex-wrap: wrap;
+            gap: 30px;
+            max-width: 1300px;
+            width: 100%;
+            height: 95vh;
+            max-height: 900px;
+            background: var(--grid-bg);
+            padding: 35px;
+            border-radius: 15px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        /* Sidebar e Lista de Palavras */
+        #sidebar { flex: 1; min-width: 280px; display: flex; flex-direction: column; }
+        #sidebar h1 { font-family: 'Raleway', sans-serif; font-size: 2.2rem; color: var(--bg-color-start); text-align: left; margin-bottom: 15px; }
+        #sidebar h2 { font-family: 'Montserrat', sans-serif; font-size: 1.6rem; color: var(--bg-color-start); border-bottom: 2px solid var(--primary-color); padding-bottom: 8px; margin-top: 15px; margin-bottom: 20px; text-align: center; }
+        #level-display, #total-levels { font-weight: 700; color: var(--select-color); font-size: 1.6rem; }
+        #word-list-container { overflow-y: auto; flex-grow: 1; }
+        #word-list { list-style: none; padding: 0; margin: 0; font-size: 1.1rem; columns: 2; gap: 12px; color: var(--text-color); }
+        #word-list li { padding: 4px 8px; font-weight: 500; border-radius: 5px; margin-bottom: 4px; }
+        .found-list-word { text-decoration: line-through; font-weight: 700 !important; transition: color 0.3s ease, background-color 0.3s ease; }
+
+        /* Grid e Células */
+        #game-container { flex: 2; display: flex; justify-content: center; align-items: center; min-width: 300px; overflow: hidden; }
+
+        #grid {
+            display: grid;
+            border: 3px solid var(--primary-color);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            background-color: var(--grid-bg);
+        }
+
+        .grid-cell {
+            font-family: 'Raleway', sans-serif;
+            font-weight: 700;
+            width: var(--cell-size);
+            height: var(--cell-size);
+            font-size: var(--font-size);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-transform: uppercase;
+            background-color: transparent; 
+            border: 1px solid var(--grid-border);
+            color: var(--text-color);
+            cursor: pointer;
+            user-select: none;
+            transition: box-shadow 0.15s ease, color 0.15s ease, transform 0.05s ease-out, background-color 0.15s ease;
+            position: relative; /* Para z-index funcionar */
+        }
+
+        .grid-cell:hover:not(.selected) {
+            background-color: var(--cell-hover);
+        }
+
+        /* Destaque de Seleção */
+        .grid-cell.selected {
+            box-shadow: var(--select-shadow);
+            color: var(--select-color);
+            transform: scale(1.05);
+            z-index: 10;
+        }
+        
+        /* Cor de fundo para células encontradas (via box-shadow) e texto */
+        .grid-cell[style*="box-shadow"]:not(.selected) {
+            color: var(--text-light);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        /* Cor de fundo SÓLIDA para a lista de palavras */
+        #word-list li[class*="found-"] {
+            background-color: rgba(var(--found-rgb-0), 1); 
+            color: var(--text-light);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        #word-list li.found-0 { background-color: rgba(var(--found-rgb-0), 1); }
+        #word-list li.found-1 { background-color: rgba(var(--found-rgb-1), 1); }
+        #word-list li.found-2 { background-color: rgba(var(--found-rgb-2), 1); }
+        #word-list li.found-3 { background-color: rgba(var(--found-rgb-3), 1); }
+        #word-list li.found-4 { background-color: rgba(var(--found-rgb-4), 1); }
+        #word-list li.found-5 { background-color: rgba(var(--found-rgb-5), 1); }
+        
+
+        /* --- Estilos de Modal e Responsividade --- */
+        #level-complete-message { display: none; text-align: center; padding: 18px; margin-top: 25px; font-weight: 700; font-size: 1.3rem; color: var(--text-light); background-color: rgba(var(--found-rgb-0), 1); border-radius: 10px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); animation: pulse 1s infinite alternate; }
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.02); } }
+        #tutorial-modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); justify-content: center; align-items: center; animation: fadeInModal 0.4s ease-out forwards; }
+        .tutorial-content { background-color: var(--secondary-color); margin: auto; padding: 40px; border-radius: 12px; width: 85%; max-width: 650px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4); text-align: center; animation: zoomIn 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
+        .tutorial-content h3 { font-family: 'Raleway', sans-serif; color: var(--bg-color-start); font-size: 1.8rem; margin-top: 0; border-bottom: 2px solid var(--primary-color); padding-bottom: 12px; margin-bottom: 25px; }
+        .tutorial-content ul { list-style: none; padding: 0; text-align: left; margin-bottom: 35px; }
+        .tutorial-content li { margin-bottom: 18px; font-size: 1.15rem; color: var(--text-color); line-height: 1.5; }
+        .tutorial-content li strong { color: var(--select-color); font-weight: 700; }
+        #close-tutorial-btn { background-color: var(--select-color); color: var(--text-light); padding: 14px 30px; border: none; border-radius: 8px; font-size: 1.2rem; font-weight: 700; cursor: pointer; transition: background-color 0.3s ease, transform 0.2s ease; }
+        #close-tutorial-btn:hover { background-color: #c82333; transform: translateY(-2px); }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeInModal { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes zoomIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        @media (max-width: 1024px) {
+            #game-wrapper { flex-direction: column-reverse; padding: 20px; gap: 20px; height: auto; max-height: none; } 
+            #sidebar { min-width: 100%; flex: 0; } 
+            #word-list-container { max-height: 200px; /* Altura máxima para a lista em telas menores */ }
+            #game-container { flex: 1; }
+        }
+
+        @media (max-width: 768px) { 
+            #start-screen { padding: 40px; } 
+            #start-screen h1 { font-size: 2.5rem; } 
+            #start-button { font-size: 1.2rem; padding: 15px 30px; } 
+            .tutorial-content { width: 90%; padding: 30px; } 
+            .tutorial-content h3 { font-size: 1.5rem; } 
+            .tutorial-content li { font-size: 1.05rem; margin-bottom: 15px;} 
+             #word-list { font-size: 1.05rem; }
+        }
+
+        @media (max-width: 500px) { 
+            body { padding: 10px; }
+            #game-wrapper { padding: 15px; }
+            #word-list { columns: 1; font-size: 1rem; } 
+            #start-screen h1 { font-size: 2rem; } 
+            #start-button { font-size: 1rem; padding: 12px 24px; } 
+            #sidebar h1 { font-size: 1.8rem; } 
+            #sidebar h2 { font-size: 1.4rem; } 
+            #difficulty-select { width: 90%; } 
+            #word-list-container { max-height: 150px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen">
+        <h1>Caça-Palavras Profissional</h1>
+        <p>20 níveis de dificuldade progressiva para desafiar seu vocabulário!</p>
+        <div id="difficulty-selector">
+            <label for="difficulty-select">Escolha o Ponto de Partida:</label>
+            <select id="difficulty-select">
+                <option value="0">Fácil (Início no Nível 1)</option>
+                <option value="3">Médio (Início no Nível 4)</option>
+                <option value="6">Difícil (Início no Nível 7)</option>
+                <option value="9">Extremo (Início no Nível 10)</option>
+                <option value="14">Mestre (Início no Nível 15)</option>
+            </select>
+        </div>
+        <button id="start-button">Iniciar Jogo</button>
+    </div>
+
+    <div id="game-wrapper">
+        <div id="sidebar">
+            <h1>Caça-Palavras</h1>
+            <h2>Nível: <span id="level-display">1</span> / <span id="total-levels">20</span></h2>
+            <div id="word-list-container">
+                 <ul id="word-list"></ul>
+            </div>
+            <div id="level-complete-message">
+                Nível Concluído! Preparando o próximo desafio...
+            </div>
+        </div>
+        <div id="game-container">
+            <div id="grid"></div>
+        </div>
+    </div>
+
+    <div id="tutorial-modal">
+        <div class="tutorial-content">
+            <h3>Bem-vindo ao Caça-Palavras!</h3>
+            <ul>
+                <li>1. <strong>Seleção</strong>: Clique na primeira letra e depois na última letra da palavra para selecioná-la.</li>
+                <li>2. <strong>Direções</strong>: As palavras podem estar na horizontal, vertical ou diagonal (em todos os sentidos!).</li>
+                <li>3. <strong>Encontrado</strong>: Palavras que se <strong>cruzam</strong> terão as cores das duas palavras, criando um efeito de sobreposição!</li>
+            </ul>
+            <button id="close-tutorial-btn">Entendi! Começar a Jogar</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. CONFIGURAÇÃO DOS NÍVEIS ---
+        const levels = [
+            // Níveis Originais
+            { gridSize: 8, words: ["CASA", "CARRO", "LIVRO", "ARVORE", "RIO", "SOL", "LUA", "ESTRELA", "CIDADE", "ESTRADA"], directions: ['horizontal', 'vertical'] },
+            { gridSize: 9, words: ["ESCOLA", "MESA", "CADEIRA", "FLOR", "JANELA", "DOCE", "PARQUE", "VERDE", "AZUL", "FELIZ"], directions: ['horizontal', 'vertical', 'horizontalReverse'] },
+            { gridSize: 10, words: ["MONTANHA", "PONTE", "PRAIA", "ONDA", "VENTO", "NOITE", "DIA", "SONHO", "TEMPO", "FUTURO"], directions: ['horizontal', 'vertical', 'horizontalReverse', 'verticalReverse'] },
+            { gridSize: 11, words: ["CRIANÇA", "BRINCAR", "AMIGO", "FAMILIA", "VIAGEM", "PASSEIO", "CAMINHAR", "ESPACO", "PLANETA", "MUNDO"], directions: ['horizontal', 'vertical', 'horizontalReverse', 'verticalReverse', 'diagonalDown'] },
+            { gridSize: 12, words: ["COMPUTADOR", "PROGRAMA", "TECLADO", "MOUSE", "TELA", "CODIGO", "SISTEMA", "DADOS", "REDE", "DIGITAL"], directions: ['horizontal', 'vertical', 'horizontalReverse', 'verticalReverse', 'diagonalDown', 'diagonalUp'] },
+            { gridSize: 13, words: ["UNIVERSO", "ASTRONAUTA", "GALAXIA", "COMETA", "ORBITA", "TELESCOPIO", "FOGUETE", "ALIEN", "GRAVIDADE", "ESTACAO"], directions: ['horizontal', 'vertical', 'horizontalReverse', 'verticalReverse', 'diagonalDown', 'diagonalUp', 'diagonalDownReverse'] },
+            { gridSize: 14, words: ["CONHECIMENTO", "INTELIGENCIA", "CULTURA", "SABEDORIA", "FILOSOFIA", "CIENCIA", "HISTORIA", "GEOGRAFIA", "MATEMATICA", "LITERATURA"], directions: ['horizontal', 'vertical', 'horizontalReverse', 'verticalReverse', 'diagonalDown', 'diagonalUp', 'diagonalDownReverse', 'diagonalUpReverse'] },
+            { gridSize: 15, words: ["CONSTITUCIONAL", "DESENVOLVIMENTO", "OPORTUNIDADE", "RESPONSABILIDADE", "TECNOLOGIA", "COMUNICACAO", "INFRAESTRUTURA", "SUSTENTABILIDADE", "GLOBALIZACAO", "AMBIENTE"], directions: ['horizontal', 'vertical', 'horizontalReverse', 'verticalReverse', 'diagonalDown', 'diagonalUp', 'diagonalDownReverse', 'diagonalUpReverse'] },
+            { gridSize: 16, words: ["OTORRINOLARINGOLOGISTA", "OFTALMOLOGIA", "GASTROENTEROLOGIA", "CARDIOLOGIA", "NEUROLOGIA", "PEDIATRIA", "GERIATRIA", "PSICOLOGIA", "ODONTOLOGIA", "DERMATOLOGIA"], directions: ['horizontal', 'vertical', 'horizontalReverse', 'verticalReverse', 'diagonalDown', 'diagonalUp', 'diagonalDownReverse', 'diagonalUpReverse'] },
+            { gridSize: 18, words: ["PNEUMONOULTRAMICROSCOPICOSSILICOVOLCANOCONIOSE", "ANTIDESESTABELECIMENTARISMO", "INCOMPREENSIBILIDADES", "EXTRAORDINARIO", "AUTOMATIZACAO", "BIODIVERSIDADE", "INFRAESTRUTURA", "CONSCIENCIA", "INTERDISCIPLINAR", "AUTOSSUFICIENCIA"], directions: ['horizontal', 'vertical', 'horizontalReverse', 'verticalReverse', 'diagonalDown', 'diagonalUp', 'diagonalDownReverse', 'diagonalUpReverse'] },
+            
+            // 10 NOVOS NÍVEIS
+            { gridSize: 18, words: ["MERCURIO", "VENUS", "TERRA", "MARTE", "JUPITER", "SATURNO", "URANO", "NETUNO", "PLUTAO", "ASTEROIDE", "NEBULOSA", "SUPERNOVA"], directions: ['horizontal', 'vertical', 'horizontalReverse', 'verticalReverse', 'diagonalDown', 'diagonalUp', 'diagonalDownReverse', 'diagonalUpReverse'] },
+            { gridSize: 19, words: ["EINSTEIN", "NEWTON", "GALILEU", "CURIE", "DARWIN", "TESLA", "KEPLER", "COPERNICO", "ARQUIMEDES", "PASTEUR", "HAWKING", "FARADAY"], directions: ['horizontal', 'vertical', 'horizontalReverse', 'verticalReverse', 'diagonalDown', 'diagonalUp', 'diagonalDownReverse', 'diagonalUpReverse'] },
+            { gridSize: 19, words: ["BRASILIA", "MOSCOU", "PEQUIM", "WASHINGTON", "CANBERRA", "OTTAWA", "BERLIM", "PARIS", "LONDRES", "ROMA", "MADRID", "TOQUIO"], directions: ['horizontal', 'vertical', 'horizontalReverse', 'verticalReverse', 'diagonalDown', 'diagonalUp', 'diagonalDownReverse', 'diagonalUpReverse'] },
+            { gridSize: 20, words: ["VIOLINO", "PIANO", "GUITARRA", "BATERIA", "SAXOFONE", "TROMPETE", "FLAUTA", "VIOLONCELO", "CONTRABAIXO", "HARPA", "ACORDEAO", "CLARINETE"], directions: ['horizontal', 'vertical', 'horizontalReverse', 'verticalReverse', 'diagonalDown', 'diagonalUp', 'diagonalDownReverse', 'diagonalUpReverse'] },
+            { gridSize: 20, words: ["LEONARDO", "MICHELANGELO", "RAFAEL", "DONATELLO", "REMBRANDT", "MONET", "PICASSO", "VAN GOGH", "DALI", "VELAZQUEZ", "CARAVAGGIO", "RENOIR"], directions: ['horizontal', 'vertical', 'horizontalReverse', 'verticalReverse', 'diagonalDown', 'diagonalUp', 'diagonalDownReverse', 'diagonalUpReverse'] },
+            { gridSize: 21, words: ["AMAZONIA", "SAARA", "HIMALAIA", "ANDES", "NILO", "EVEREST", "PACIFICO", "ATLANTICO", "ANTARTIDA", "GROENLANDIA", "CONGO", "GANGES"], directions: ['horizontal', 'vertical', 'horizontalReverse', 'verticalReverse', 'diagonalDown', 'diagonalUp', 'diagonalDownReverse', 'diagonalUpReverse'] },
+            { gridSize: 22, words: ["QUIMICA", "FISICA", "BIOLOGIA", "ASTRONOMIA", "GEOLOGIA", "ECOLOGIA", "GENETICA", "BOTANICA", "ZOOLOGIA", "CITOLOGIA", "MECANICA", "TERMODINAMICA"], directions: ['horizontal', 'vertical', 'horizontalReverse', 'verticalReverse', 'diagonalDown', 'diagonalUp', 'diagonalDownReverse', 'diagonalUpReverse'] },
+            { gridSize: 23, words: ["ARQUITETURA", "ENGENHARIA", "MEDICINA", "ADVOCACIA", "JORNALISMO", "PUBLICIDADE", "ECONOMIA", "ADMINISTRACAO", "PSICANALISE", "ANTROPOLOGIA", "SOCIOLOGIA", "PALEONTOLOGIA"], directions: ['horizontal', 'vertical', 'horizontalReverse', 'verticalReverse', 'diagonalDown', 'diagonalUp', 'diagonalDownReverse', 'diagonalUpReverse'] },
+            { gridSize: 24, words: ["PARADOXO", "METAFORA", "ALGORITMO", "HEURISTICA", "EPISTEMOLOGIA", "ONTOLOGIA", "SILOGISMO", "DIALETICA", "EMPIRISMO", "RACIONALISMO", "FENOMENOLOGIA", "EXISTENCIALISMO"], directions: ['horizontal', 'vertical', 'horizontalReverse', 'verticalReverse', 'diagonalDown', 'diagonalUp', 'diagonalDownReverse', 'diagonalUpReverse'] },
+            { gridSize: 25, words: ["CALEIDOSCOPIO", "VENTRILOQUO", "ORNITORRINCO", "PARALELEPIPEDO", "PROTAGONISTA", "ANACRONISMO", "METAMORFOSE", "UBIQUIDADE", "RESILIENCIA", "PERSPECTIVA", "EQUILIBRIO", "SINERGIA", "QUINTESSENCIA", "EFEMERIDADE"], directions: ['horizontal', 'vertical', 'horizontalReverse', 'verticalReverse', 'diagonalDown', 'diagonalUp', 'diagonalDownReverse', 'diagonalUpReverse'] }
+        ];
+
+        // --- 2. CLASSE DO JOGO (Lógica Central) ---
+        class WordSearchGame {
+            constructor(domElements, config) {
+                this.elements = domElements;
+                this.config = config;
+                this.foundColorsCount = 6; 
+                this.colorRGBMap = { 0: 'var(--found-rgb-0)', 1: 'var(--found-rgb-1)', 2: 'var(--found-rgb-2)', 3: 'var(--found-rgb-3)', 4: 'var(--found-rgb-4)', 5: 'var(--found-rgb-5)' };
+                this.directionMap = { 'horizontal': { dx: 1, dy: 0 }, 'vertical': { dx: 0, dy: 1 }, 'horizontalReverse': { dx: -1, dy: 0 }, 'verticalReverse': { dx: 0, dy: -1 }, 'diagonalDown': { dx: 1, dy: 1 }, 'diagonalUp': { dx: 1, dy: -1 }, 'diagonalDownReverse': { dx: -1, dy: -1 }, 'diagonalUpReverse': { dx: -1, dy: 1 } };
+                this.state = { currentLevelIndex: 0, grid: [], wordsToFind: [], foundWords: new Set(), wordLocations: {}, gameActive: false, selectedCells: [], lastClickedCell: null, wordsFoundCount: 0, cellColors: {} };
+                this.alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                this.levelChangeTimeout = null;
+                this.eventsBound = false;
+                
+                // NOVO: Contexto de Áudio para efeitos sonoros
+                this.audioContext = null;
+            }
+            
+            // NOVO: Inicializa o contexto de áudio com um gesto do usuário
+            initAudio() {
+                if (!this.audioContext) {
+                    try {
+                        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    } catch (e) {
+                        console.error("Web Audio API não é suportada neste navegador.", e);
+                    }
+                }
+            }
+
+            // NOVO: Função para tocar o som de palavra encontrada
+            playFoundWordSound() {
+                if (!this.audioContext) return;
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.3, this.audioContext.currentTime + 0.01); // Ataque rápido
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(440, this.audioContext.currentTime); // Nota Lá (A4)
+                oscillator.frequency.exponentialRampToValueAtTime(880, this.audioContext.currentTime + 0.1); // Sobe o tom
+                
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, this.audioContext.currentTime + 0.2); // Decaimento rápido
+                
+                oscillator.start(this.audioContext.currentTime);
+                oscillator.stop(this.audioContext.currentTime + 0.2);
+            }
+
+            showTutorial() { this.state.gameActive = false; this.elements.tutorialModal.style.display = 'flex'; }
+            hideTutorial() { this.state.gameActive = true; this.elements.tutorialModal.style.display = 'none'; }
+
+            startGame(initialLevelIndex) {
+                this.initAudio(); // Inicializa o áudio no início do jogo
+                this.state.currentLevelIndex = initialLevelIndex;
+                this.elements.startScreen.style.display = 'none';
+                this.elements.gameWrapper.style.display = 'flex';
+                this.elements.totalLevels.textContent = this.config.levels.length;
+                this.bindEvents();
+                this.loadLevel(this.state.currentLevelIndex);
+            }
+
+            loadLevel(levelIndex) {
+                this.state.foundWords.clear(); this.state.wordLocations = {}; this.state.cellColors = {}; this.elements.grid.innerHTML = ''; this.elements.wordList.innerHTML = ''; this.elements.levelCompleteMessage.style.display = 'none'; this.state.selectedCells = []; this.state.currentLevelIndex = levelIndex; this.state.wordsFoundCount = 0; this.state.lastClickedCell = null; 
+                if (this.levelChangeTimeout) clearTimeout(this.levelChangeTimeout);
+
+                const level = this.config.levels[levelIndex];
+                if (!level) {
+                    alert("🎉 Parabéns! Você completou todos os níveis!");
+                    window.location.reload(); // Recarrega para voltar à tela inicial
+                    return;
+                }
+                
+                if (levelIndex === parseInt(this.elements.difficultySelect.value)) { this.showTutorial(); } else { this.state.gameActive = true; }
+
+                const { gridSize, words, directions } = level;
+                this.state.wordsToFind = words.map(word => word.toUpperCase());
+                this.elements.levelDisplay.textContent = levelIndex + 1;
+
+                let placementSuccess = false; let attempts = 0;
+                while (!placementSuccess && attempts < 10) { 
+                    attempts++; this.state.grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(null)); this.state.wordLocations = {}; placementSuccess = this.placeWords(gridSize, directions);
+                }
+                if (!placementSuccess) { console.error(`Falha ao posicionar palavras para o nível ${levelIndex + 1}.`); this.loadLevel(this.state.currentLevelIndex); return; }
+
+                this.fillEmptyCells(gridSize); this.renderGrid(gridSize); this.renderWordList();
+            }
+
+            placeWords(gridSize, allowedDirections) {
+                const shuffledWords = [...this.state.wordsToFind].sort((a, b) => b.length - a.length);
+                for (const word of shuffledWords) {
+                    let placed = false; let attempts = 0;
+                    while (!placed && attempts < 500) { 
+                        attempts++; const direction = allowedDirections[Math.floor(Math.random() * allowedDirections.length)]; const { dx, dy } = this.directionMap[direction]; const x = Math.floor(Math.random() * gridSize); const y = Math.floor(Math.random() * gridSize);
+                        if (this.canPlaceWord(word, x, y, dx, dy, gridSize)) {
+                            const wordCoords = [];
+                            for (let i = 0; i < word.length; i++) { const newX = x + i * dx; const newY = y + i * dy; this.state.grid[newY][newX] = word[i]; wordCoords.push({ x: newX, y: newY }); }
+                            this.state.wordLocations[word] = wordCoords; placed = true;
+                        }
+                    }
+                    if (!placed) return false; 
+                }
+                return true;
+            }
+
+            canPlaceWord(word, x, y, dx, dy, gridSize) {
+                for (let i = 0; i < word.length; i++) {
+                    const newX = x + i * dx; const newY = y + i * dy;
+                    if (newX < 0 || newX >= gridSize || newY < 0 || newY >= gridSize) return false;
+                    const cell = this.state.grid[newY][newX]; if (cell !== null && cell !== word[i]) return false;
+                }
+                return true;
+            }
+
+            fillEmptyCells(gridSize) {
+                for (let y = 0; y < gridSize; y++) { for (let x = 0; x < gridSize; x++) { if (this.state.grid[y][x] === null) { this.state.grid[y][x] = this.alphabet[Math.floor(Math.random() * this.alphabet.length)]; } } }
+            }
+            
+            // LÓGICA DE RESPONSIVIDADE APRIMORADA
+            renderGrid(gridSize) {
+                this.elements.grid.innerHTML = '';
+                
+                // Pega as dimensões do container, com um pequeno padding
+                const containerWidth = this.elements.gameContainer.clientWidth - 20;
+                const containerHeight = this.elements.gameContainer.clientHeight - 20;
+
+                // Calcula o tamanho da célula baseado no menor lado (largura ou altura)
+                const cellSize = Math.floor(Math.min(containerWidth, containerHeight) / gridSize);
+                const fontSize = `${Math.max(10, cellSize * 0.5)}px`;
+
+                document.documentElement.style.setProperty('--cell-size', `${cellSize}px`);
+                document.documentElement.style.setProperty('--font-size', fontSize);
+
+                this.elements.grid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+                
+                for (let y = 0; y < gridSize; y++) {
+                    for (let x = 0; x < gridSize; x++) {
+                        const cell = document.createElement('div');
+                        cell.classList.add('grid-cell');
+                        cell.textContent = this.state.grid[y][x];
+                        cell.dataset.x = x;
+                        cell.dataset.y = y;
+
+                        // Reaplica as cores/sombras das palavras já encontradas
+                        const key = `${x},${y}`;
+                        if (this.state.cellColors[key]) {
+                            const shadows = this.state.cellColors[key].map(rgb => `0 0 0 50px rgba(${rgb}, var(--found-opacity)) inset`).join(', ');
+                            cell.style.boxShadow = shadows;
+                        }
+
+                        this.elements.grid.appendChild(cell);
+                    }
+                }
+            }
+
+            renderWordList() { this.state.wordsToFind.forEach(word => { const li = document.createElement('li'); li.textContent = word; li.id = `word-${word}`; this.elements.wordList.appendChild(li); }); }
+
+            bindEvents() {
+                if (!this.eventsBound) {
+                    this.elements.grid.addEventListener('mousedown', this.handleCellClick.bind(this));
+                    this.elements.closeTutorialBtn.addEventListener('click', this.hideTutorial.bind(this));
+                    this.eventsBound = true;
+                }
+            }
+            
+            clearSelection() { this.state.selectedCells.forEach(cell => cell.classList.remove('selected')); this.state.selectedCells = []; this.state.lastClickedCell = null; }
+
+            handleCellClick(e) {
+                if (!this.state.gameActive || e.target === this.elements.grid) return;
+                const cell = e.target.closest('.grid-cell'); if (!cell) return;
+                
+                if (this.state.lastClickedCell === null) { this.clearSelection(); this.state.lastClickedCell = cell; cell.classList.add('selected'); } 
+                else if (cell === this.state.lastClickedCell) { this.clearSelection(); } 
+                else {
+                    const newCells = this.getPath(this.state.lastClickedCell, cell);
+                    if (newCells.length > 1) { this.state.selectedCells = newCells; newCells.forEach(c => c.classList.add('selected')); this.checkSelection(); }
+                    this.clearSelection();
+                }
+            }
+
+            getPath(startCell, endCell) {
+                const startX = parseInt(startCell.dataset.x); const startY = parseInt(startCell.dataset.y); const endX = parseInt(endCell.dataset.x); const endY = parseInt(endCell.dataset.y);
+                const dx = endX - startX; const dy = endY - startY;
+                if (!(dx === 0 || dy === 0 || Math.abs(dx) === Math.abs(dy))) return [];
+                const cells = []; const numSteps = Math.max(Math.abs(dx), Math.abs(dy)); if (numSteps === 0) return [];
+                const stepX = dx / numSteps; const stepY = dy / numSteps;
+                for (let i = 0; i <= numSteps; i++) {
+                    const cell = document.querySelector(`[data-x="${startX + i * stepX}"][data-y="${startY + i * stepY}"]`);
+                    if (cell) { cells.push(cell); } else { return []; }
+                }
+                return cells;
+            }
+
+            markWordAsFound(word, cellsToMark, colorIndex) {
+                this.playFoundWordSound(); // TOCA O SOM
+                this.state.foundWords.add(word);
+                const colorRGB = this.colorRGBMap[colorIndex]; const colorClass = `found-${colorIndex}`;
+
+                cellsToMark.forEach(cell => {
+                    const key = `${cell.dataset.x},${cell.dataset.y}`;
+                    if (!this.state.cellColors[key]) { this.state.cellColors[key] = []; }
+                    this.state.cellColors[key].push(colorRGB);
+                    
+                    const shadows = this.state.cellColors[key].map(rgb => `0 0 0 50px rgba(${rgb}, var(--found-opacity)) inset`).join(', ');
+                    cell.style.boxShadow = shadows;
+                });
+
+                const wordLi = document.getElementById(`word-${word}`);
+                if (wordLi) { wordLi.classList.add('found-list-word', colorClass); }
+
+                this.checkWinCondition();
+            }
+            
+            checkSelection() {
+                if (this.state.selectedCells.length === 0) return;
+                const selectedWord = this.state.selectedCells.map(cell => cell.textContent).join('');
+                const selectedWordReverse = [...selectedWord].reverse().join('');
+
+                for (const word of this.state.wordsToFind) {
+                    if (!this.state.foundWords.has(word) && (word === selectedWord || word === selectedWordReverse)) {
+                        const coords = this.state.wordLocations[word];
+                        if (this.isCorrectLocation(coords, this.state.selectedCells)) {
+                            const cellsToMark = (word === selectedWord) ? this.state.selectedCells : this.state.selectedCells.slice().reverse();
+                            const colorIndex = this.state.wordsFoundCount % this.foundColorsCount;
+                            this.markWordAsFound(word, cellsToMark, colorIndex);
+                            this.state.wordsFoundCount++; 
+                            return;
+                        }
+                    }
+                }
+            }
+
+            isCorrectLocation(wordCoords, cells) {
+                if (wordCoords.length !== cells.length) return false;
+                const cellCoords = cells.map(cell => ({ x: parseInt(cell.dataset.x), y: parseInt(cell.dataset.y) }));
+                const matchNormal = wordCoords.every((coord, index) => coord.x === cellCoords[index]?.x && coord.y === cellCoords[index]?.y);
+                const matchReverse = wordCoords.slice().reverse().every((coord, index) => coord.x === cellCoords[index]?.x && coord.y === cellCoords[index]?.y);
+                return matchNormal || matchReverse;
+            }
+
+            checkWinCondition() {
+                if (this.state.foundWords.size === this.state.wordsToFind.length) {
+                    this.elements.levelCompleteMessage.style.display = 'block';
+                    this.levelChangeTimeout = setTimeout(() => {
+                        this.loadLevel(this.state.currentLevelIndex + 1);
+                    }, 2500);
+                }
+            }
+        }
+
+        // --- 3. INICIALIZAÇÃO ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const domElements = {
+                startScreen: document.getElementById('start-screen'), startButton: document.getElementById('start-button'),
+                gameWrapper: document.getElementById('game-wrapper'), gameContainer: document.getElementById('game-container'),
+                grid: document.getElementById('grid'), wordList: document.getElementById('word-list'),
+                levelDisplay: document.getElementById('level-display'), totalLevels: document.getElementById('total-levels'),
+                levelCompleteMessage: document.getElementById('level-complete-message'), tutorialModal: document.getElementById('tutorial-modal'),
+                closeTutorialBtn: document.getElementById('close-tutorial-btn'), difficultySelect: document.getElementById('difficulty-select')
+            };
+
+            const game = new WordSearchGame(domElements, { levels: levels });
+            
+            domElements.startButton.addEventListener('click', () => {
+                const initialLevelIndex = parseInt(domElements.difficultySelect.value);
+                game.startGame(initialLevelIndex);
+            });
+
+            domElements.closeTutorialBtn.addEventListener('click', () => { game.hideTutorial(); });
+
+            // NOVO: Listener de redimensionamento para ajustar a grade dinamicamente
+            window.addEventListener('resize', () => {
+                if (domElements.gameWrapper.style.display === 'flex' && game.state.currentLevelIndex < levels.length) {
+                     // Um pequeno timeout para evitar renderizações excessivas durante o redimensionamento
+                     clearTimeout(window.resizedFinished);
+                     window.resizedFinished = setTimeout(() => {
+                         game.renderGrid(levels[game.state.currentLevelIndex].gridSize);
+                     }, 100);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
