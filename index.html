@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caça-Palavras Profissional</title>
+
+    <!-- Fontes do Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Raleway:wght@700&display=swap" rel="stylesheet">
+    
+    <!-- Link para o arquivo CSS externo -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Tela Inicial do Jogo -->
+    <div id="start-screen">
+        <h1>Caça-Palavras Profissional</h1>
+        <p>20 níveis de dificuldade progressiva para desafiar seu vocabulário!</p>
+        <div id="difficulty-selector">
+            <label for="difficulty-select">Escolha o Ponto de Partida:</label>
+            <select id="difficulty-select">
+                <option value="0">Fácil (Início no Nível 1)</option>
+                <option value="3">Médio (Início no Nível 4)</option>
+                <option value="6">Difícil (Início no Nível 7)</option>
+                <option value="9">Extremo (Início no Nível 10)</option>
+                <option value="14">Mestre (Início no Nível 15)</option>
+            </select>
+        </div>
+        <button id="start-button">Iniciar Jogo</button>
+    </div>
+
+    <!-- Container Principal do Jogo -->
+    <div id="game-wrapper">
+        <div id="sidebar">
+            <h1>Caça-Palavras</h1>
+            <h2>Nível: <span id="level-display">1</span> / <span id="total-levels">20</span></h2>
+            <div id="word-list-container">
+                 <ul id="word-list"></ul>
+            </div>
+            <div id="level-complete-message">
+                Nível Concluído! Preparando o próximo desafio...
+            </div>
+        </div>
+        <div id="game-container">
+            <div id="grid"></div>
+        </div>
+    </div>
+
+    <!-- Modal de Tutorial -->
+    <div id="tutorial-modal">
+        <div class="tutorial-content">
+            <h3>Bem-vindo ao Caça-Palavras!</h3>
+            <ul>
+                <li>1. <strong>Seleção</strong>: Clique na primeira letra e depois na última letra da palavra para selecioná-la.</li>
+                <li>2. <strong>Direções</strong>: As palavras podem estar na horizontal, vertical ou diagonal (em todos os sentidos!).</li>
+                <li>3. <strong>Encontrado</strong>: Palavras que se <strong>cruzam</strong> terão as cores das duas palavras, criando um efeito de sobreposição!</li>
+            </ul>
+            <button id="close-tutorial-btn">Entendi! Começar a Jogar</button>
+        </div>
+    </div>
+
+    <!-- Link para o arquivo JavaScript externo (no final do body) -->
+    <script src="script.js"></script>
+</body>
+</html>
